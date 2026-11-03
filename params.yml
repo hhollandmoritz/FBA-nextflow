@@ -1,76 +1,134 @@
-input: "genomes/G_011_1B_oryzifermentans_assembly_called_genes.faa" #"genomes/*.faa"
+```yaml
+# ============================================================
+# General settings
+# ============================================================
+
+input: "genomes/G_011_1B_oryzifermentans_assembly_called_genes.faa"
+# input: "genomes/*.faa"
+
 outdir: "results"
 
+
 # ============================================================
-# carveme settings
+# Reconstruction tools
 # ============================================================
+# Enable or disable each reconstruction method independently.
+# Multiple methods can run in the same Nextflow execution.
+
 run_carveme: false
+run_gapseq: true
+run_raven: false
+
+
+# ============================================================
+# CarveMe settings
+# ============================================================
+
+# Optimization solver
 solver: "scip"
 
-carveme_args: "" # use for other carvme arguments, ex: "--default-score -2"
+# Additional CarveMe arguments
+# Example: "--default-score -2"
+carveme_args: ""
 
-# Universe settings, only use one
+# Reconstruction universe (specify only one)
 universe: "gramneg"
-#universe_file: /home/hahollan/MIRA/fba_aab/carveme-nextflow/assets/universe/iAp386B454_bigg.xml # change to path to custom universe file
+# universe_file: "assets/universe/iAp386B454_bigg.xml"
 
-# Soft reconstruction constraints (optional); to disable, set to null
+# Optional soft reconstruction constraints
+# Set to null to disable
 carveme_soft_constraints: "assets/carveme_soft_constraints.tsv"
 
-# Media options, each media option that is not null will be run
+# Gap-filling media
+# Each entry represents a separate reconstruction condition.
+# Use null for built-in media; provide a path for custom media.
 media_databases:
   NO_GAPFILL: null
   "M9[-O2]": null
   SDMM: "assets/SDMM_media.tsv"
-  "SDMM_ETOH": "assets/SDMM_media_etoh.tsv"
+  SDMM_ETOH: "assets/SDMM_media_etoh.tsv"
+
 
 # ============================================================
 # gapseq settings
 # ============================================================
 
-run_gapseq: true
-
-# Sequence alignment backend:
-# options are blast, diamond, or mmseqs2
+# Sequence alignment backend: blast, diamond, or mmseqs2
 gapseq_aligner: "diamond"
 
 # Restrict reference sequences to bacterial proteins
 gapseq_taxonomy: "Bacteria"
 
-# null = allow gapseq to predict the gap-filling medium automatically
-# Later this can point to a gapseq-formatted medium file
+# Gap-filling medium
+# null = predict a medium automatically
+# Otherwise specify a gapseq-formatted medium file
 gapseq_medium: null
 
-# Optional external gapseq sequence database.
-# Leave null for initial testing.
+# Optional external reference sequence database
 gapseq_db: "/home/hahollan/MIRA/fba_aab/FBA-nextflow/assets/gapseq_db"
 
-# Do not attempt to update/download the sequence database
+# Prevent downloading or updating the reference database
 gapseq_offline: true
 
-# Manual adaptation of the draft model.
-# Leave null for this baseline test.
-gapseq_adapt_add: "1.1.5.5,R01234,rxn12345" #null
+# Manual curation of draft model
+# Accepts comma-separated identifiers or a file path
+gapseq_adapt_add: "1.1.5.5,R01234,rxn12345"
 gapseq_adapt_remove: null
 
-# Additional arguments passed directly to gapseq doall
+# Additional arguments for gapseq doall
 gapseq_args: ""
 
 
 # ============================================================
-# # Cobrapy settings
+# RAVEN settings
 # ============================================================
 
-run_cobra: false
+# Draft reconstruction method:
+#   auto     = use supplied KOs if available, otherwise FASTA
+#   ko       = require existing KO assignments
+#   sequence = reconstruct from protein FASTA
+#
+# Initial Nextflow integration supports sequence mode.
+raven_method: "sequence"
+
+# Organism domain: prokaryotes or eukaryotes
+raven_domain: "prokaryotes"
+
+# Optional cached KEGG reference data for offline reconstruction
+raven_artefact_dir: null
+
+# Optional HMM library used for sequence reconstruction
+raven_library: null
+
+# Future options for importing precomputed KO annotations
+# These will be connected when we implement the KO input channel.
+raven_ko_annotations: null
+raven_gene_column: "gene_id"
+raven_ko_column: "ko_id"
+
+# KEGG reference resources for KO-based reconstruction
+raven_reference_model: null
+raven_ko_reaction: null
+raven_rxn_flags: null
+
+
+# ============================================================
+# COBRApy analysis settings
+# ============================================================
+
+run_cobra: true
+
+# Reference database for reaction/metabolite annotation
 modelseed_db: "assets/ModelSEEDDatabase"
 
+
 # ============================================================
-# # Escher settings
+# Escher visualization settings
 # ============================================================
 
-# For escher map-building module
-escher_map: null #"assets/escher/iJO1366.Central_metabolism.json"
+# null disables Escher map generation
+escher_map: null
+# escher_map: "assets/escher/iJO1366.Central_metabolism.json"
+
 escher_reaction_scale_preset: "GaBuRd"
-
-
-
-
+```
