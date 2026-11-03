@@ -10,12 +10,15 @@ genomes
 assets/*media*
 assets/bigg*
 assets/carveme*
+assets/gapseq_db
 containers/*.log
 containers/*.sif
 .nextflow/
 .nextflow.log*
-<<<<<<< HEAD
 .Rproj.user
-=======
 bin/__pycache__/
->>>>>>> add_gapseq
+docs/*.ipynb
+docs/*.html
+docs/*.ipynb_checkpoints
+docs/model_comparison
+docs/*.json
