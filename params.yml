@@ -1,4 +1,3 @@
-```yaml
 # ============================================================
 # General settings
 # ============================================================
@@ -16,8 +15,8 @@ outdir: "results"
 # Multiple methods can run in the same Nextflow execution.
 
 run_carveme: false
-run_gapseq: true
-run_raven: false
+run_gapseq: false
+run_raven: true
 
 
 # ============================================================
@@ -88,25 +87,25 @@ gapseq_args: ""
 #   ko       = require existing KO assignments
 #   sequence = reconstruct from protein FASTA
 #
-# Initial Nextflow integration supports sequence mode.
+# Use sequence mode for the first single-genome test.
 raven_method: "sequence"
 
-# Organism domain: prokaryotes or eukaryotes
+# Organism domain
 raven_domain: "prokaryotes"
 
-# Optional cached KEGG reference data for offline reconstruction
+# Optional cached KEGG reference data
+# Set these paths if compute nodes cannot download resources.
 raven_artefact_dir: null
-
-# Optional HMM library used for sequence reconstruction
 raven_library: null
 
-# Future options for importing precomputed KO annotations
-# These will be connected when we implement the KO input channel.
+# Optional precomputed KO annotations
+# Not used for this sequence-based test.
 raven_ko_annotations: null
 raven_gene_column: "gene_id"
 raven_ko_column: "ko_id"
 
-# KEGG reference resources for KO-based reconstruction
+# Reference resources for KO-based reconstruction
+# Not required for sequence mode.
 raven_reference_model: null
 raven_ko_reaction: null
 raven_rxn_flags: null
@@ -116,7 +115,8 @@ raven_rxn_flags: null
 # COBRApy analysis settings
 # ============================================================
 
-run_cobra: true
+# Disabled until the RAVEN draft model is validated.
+run_cobra: false
 
 # Reference database for reaction/metabolite annotation
 modelseed_db: "assets/ModelSEEDDatabase"
@@ -131,4 +131,3 @@ escher_map: null
 # escher_map: "assets/escher/iJO1366.Central_metabolism.json"
 
 escher_reaction_scale_preset: "GaBuRd"
-```

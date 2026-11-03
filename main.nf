@@ -16,6 +16,10 @@ include {
     RUN_GAPSEQ_FILL
 } from './modules/local/run_gapseq'
 
+include {
+    RUN_RAVEN_DRAFT
+} from './modules/local/run_raven'
+
 include { COBRA_ANALYSIS } from './subworkflows/local/cobra_analysis'
 
 include { BUILD_ESCHER_MAP } from './modules/local/build_escher_map'
@@ -54,6 +58,41 @@ workflow {
      * tuple(sample_id, medium, model)
      */
     all_models_ch = Channel.empty()
+
+
+    /*
+    * RAVEN reconstruction
+    */
+    if (params.run_raven) {
+
+        /*
+        * Initial reconstruction from protein FASTA.
+        *
+        * Input:
+        * tuple(sample_id, faa)
+        */
+        RUN_RAVEN_DRAFT(genomes_ch)
+
+        /*
+        * Add the draft models to the common model channel.
+        *
+        * Output:
+        * tuple(sample_id, medium, model)
+        *
+        * RAVEN_DRAFT indicates that the models have
+        * not yet been gap-filled.
+        */
+        raven_models_ch = RUN_RAVEN_DRAFT.out.models
+            .map { sample_id, model ->
+                tuple(
+                    sample_id,
+                    'RAVEN_DRAFT',
+                    model
+                )
+            }
+
+        all_models_ch = all_models_ch.mix(raven_models_ch)
+    }
 
     /*
     * gapseq reconstruction
