@@ -64,7 +64,7 @@ workflow {
         * Search for metabolic pathways/reactions (GAPSEQ_FIND) 
         * and transporters (GAPSEQ_TRANSPORT).
         *
-        * Both processes consume:
+        * Inputs:
         * tuple(sample_id, faa)
         */
         RUN_GAPSEQ_FIND(genomes_ch)
@@ -103,11 +103,31 @@ workflow {
         /*
         * Construct the initial draft model. 
         * Turn the evidence (reactions, pathways, and transporters) into 
-        * an initial genome-scale metabolic model. 
+        * a draft genome-scale metabolic model. 
         */
         RUN_GAPSEQ_DRAFT(gapseq_draft_input_ch)
+
+        /*
+        * Manual curation of draft model.
+        *
+        * RUN_GAPSEQ_DRAFT emits:
+        * tuple(
+        *     sample_id,
+        *     draft_rds,
+        *     draft_xml
+        * )
+        *
+        * Inputs: tuple(sample_id, draft_rds, draft_xml).
+        *
+        * If no adaptations are specified in params.gapseq_adaptations, 
+        * RUN_GAPSEQ_ADAPT passes the draft model through unchanged.
+        */
+        RUN_GAPSEQ_ADAPT(
+            RUN_GAPSEQ_DRAFT.out.models
+        )
     }
-   
+    
+
     if (params.run_carveme) {
         /*
         * CarveMe soft-constraint file.
