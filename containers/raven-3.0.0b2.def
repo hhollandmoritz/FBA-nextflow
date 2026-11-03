@@ -1,0 +1,47 @@
+
+Bootstrap: docker
+From: condaforge/miniforge3:25.3.0-3
+
+%labels
+    Author Hannah Holland-Moritz
+    Version 3.0.0b2
+    Description RAVEN Python toolbox for GEM reconstruction
+    RAVENProject https://github.com/SysBioChalmers/raven-toolbox
+
+%post
+    set -eux
+
+    conda create -y \
+        --prefix /opt/raven \
+        -c conda-forge \
+        -c bioconda \
+        --strict-channel-priority \
+        python=3.11 \
+        pip \
+        diamond \
+        blast \
+        hmmer \
+        libsbml \
+        glpk
+
+    /opt/raven/bin/python -m pip install \
+        "raven-toolbox==3.0.0b2"
+
+    conda clean -afy
+
+%environment
+    export PATH="/opt/raven/bin:$PATH"
+    export PYTHONNOUSERSITE=1
+    export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+
+%test
+    python -c "import cobra; print(cobra.__version__)"
+    python -c "import raven_toolbox; print('RAVEN loaded')"
+
+    diamond version
+    blastp -version
+    hmmsearch -h >/dev/null
+
+%runscript
+    exec "$@"
