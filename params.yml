@@ -1,4 +1,4 @@
-input: "genomes/*.faa" #"genomes/G_011_1B_oryzifermentans_assembly_called_genes.faa" #"genomes/*.faa"
+input: "genomes/G_011_1B_oryzifermentans_assembly_called_genes.faa" #"genomes/*.faa"
 outdir: "results"
 
 # ============================================================
@@ -42,7 +42,15 @@ gapseq_medium: null
 
 # Optional external gapseq sequence database.
 # Leave null for initial testing.
-gapseq_db: "/home/hahollan/MIRA/fba_aab/carveme-nextflow/assets/gapseq_db"
+gapseq_db: "/home/hahollan/MIRA/fba_aab/FBA-nextflow/assets/gapseq_db"
+
+# Do not attempt to update/download the sequence database
+gapseq_offline: true
+
+# Manual adaptation of the draft model.
+# Leave null for this baseline test.
+gapseq_adapt_add: "1.1.5.5,R01234,rxn12345" #null
+gapseq_adapt_remove: null
 
 # Additional arguments passed directly to gapseq doall
 gapseq_args: ""
@@ -52,7 +60,7 @@ gapseq_args: ""
 # # Cobrapy settings
 # ============================================================
 
-run_cobra: true
+run_cobra: false
 modelseed_db: "assets/ModelSEEDDatabase"
 
 # ============================================================
@@ -60,7 +68,7 @@ modelseed_db: "assets/ModelSEEDDatabase"
 # ============================================================
 
 # For escher map-building module
-escher_map: "assets/escher/iJO1366.Central_metabolism.json"
+escher_map: null #"assets/escher/iJO1366.Central_metabolism.json"
 escher_reaction_scale_preset: "GaBuRd"
 
 
