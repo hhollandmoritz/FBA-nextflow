@@ -56,28 +56,56 @@ workflow {
     all_models_ch = Channel.empty()
 
     /*
-     * gapseq reconstruction
-     */
+    * gapseq reconstruction
+    */
     if (params.run_gapseq) {
 
-        RUN_GAPSEQ(genomes_ch)
+        /*
+        * Search for metabolic pathways/reactions (GAPSEQ_FIND) 
+        * and transporters (GAPSEQ_TRANSPORT).
+        *
+        * Both processes consume:
+        * tuple(sample_id, faa)
+        */
+        RUN_GAPSEQ_FIND(genomes_ch)
+        RUN_GAPSEQ_TRANSPORT(genomes_ch)
 
         /*
-         * emits:
-         * tuple(sample_id, model)
-         *
-         * We add a label so that it matches the
-         * tuple expected by COBRApy and Escher:
-         * tuple(sample_id, medium, model)
-         * later if medium is changed, we can 
-         * update to reflect the custom media
-         */
-        gapseq_models_ch = RUN_GAPSEQ.out.models
-            .map { sample_id, model ->
-                tuple(sample_id, 'GAPSEQ_AUTO', model)
-            }
+        * RUN_GAPSEQ_FIND emits:
+        * tuple(
+        *     sample_id,
+        *     reactions,
+        *     pathways
+        * )
+        *
+        * RUN_GAPSEQ_TRANSPORT emits:
+        * tuple(
+        *     sample_id,
+        *     transporters
+        * )
+        *
+        * Join the two channels by sample_id.
+        *
+        * Result:
+        * tuple(
+        *     sample_id,
+        *     reactions,
+        *     pathways,
+        *     transporters
+        * )
+        */
+        gapseq_draft_input_ch = RUN_GAPSEQ_FIND.out.evidence
+            .join(
+                RUN_GAPSEQ_TRANSPORT.out.evidence,
+                by: 0
+            )
 
-        all_models_ch = all_models_ch.mix(gapseq_models_ch)
+        /*
+        * Construct the initial draft model. 
+        * Turn the evidence (reactions, pathways, and transporters) into 
+        * an initial genome-scale metabolic model. 
+        */
+        RUN_GAPSEQ_DRAFT(gapseq_draft_input_ch)
     }
    
     if (params.run_carveme) {
