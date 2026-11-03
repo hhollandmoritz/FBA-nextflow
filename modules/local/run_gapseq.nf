@@ -118,8 +118,11 @@ process RUN_GAPSEQ_FIND {
     """
     set -o pipefail
 
-    gapseq find \
-        -v 2 \
+     gapseq find \
+        -v 0 \
+        -b 200 \
+        -p all \
+        -l all \
         -t '${params.gapseq_taxonomy}' \
         -K ${task.cpus} \
         -A '${params.gapseq_aligner}' \
