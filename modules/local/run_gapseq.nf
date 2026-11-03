@@ -118,7 +118,7 @@ process RUN_GAPSEQ_FIND {
     """
     set -o pipefail
 
-     gapseq find \
+    gapseq find \
         -v 0 \
         -b 200 \
         -p all \
