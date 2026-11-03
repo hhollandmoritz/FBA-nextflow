@@ -6,7 +6,15 @@ include {
     RUN_CARVEME_NO_GAPFILL
  } from './modules/local/run_carveme'
 
-include { RUN_GAPSEQ } from './modules/local/run_gapseq'
+include {
+    RUN_GAPSEQ_DOALL
+    RUN_GAPSEQ_FIND
+    RUN_GAPSEQ_TRANSPORT
+    RUN_GAPSEQ_DRAFT
+    RUN_GAPSEQ_ADAPT
+    RUN_GAPSEQ_MEDIUM
+    RUN_GAPSEQ_FILL
+} from './modules/local/run_gapseq'
 
 include { COBRA_ANALYSIS } from './subworkflows/local/cobra_analysis'
 
