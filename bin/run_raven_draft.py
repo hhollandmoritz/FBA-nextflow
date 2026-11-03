@@ -19,8 +19,11 @@ import cobra
 import pandas as pd
 
 from raven_toolbox.reconstruction.kegg import (
-    assemble_model_from_ko_genes,
     get_kegg_model_from_sequences_with_artefacts,
+)
+
+from raven_toolbox.reconstruction.kegg.assemble import (
+    assemble_model_from_ko_genes,
 )
 
 KO_PATTERN = re.compile(r"(?<![A-Za-z0-9])K\d{5}(?!\d)")
