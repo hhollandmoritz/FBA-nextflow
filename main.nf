@@ -125,6 +125,106 @@ workflow {
         RUN_GAPSEQ_ADAPT(
             RUN_GAPSEQ_DRAFT.out.models
         )
+
+        /*
+        * Pass the adapted model
+        * to the next gapseq steps.
+        *
+        * Emits:
+        * tuple(sample_id, adapted_rds)
+        */
+        gapseq_adapted_rds_ch = RUN_GAPSEQ_ADAPT.out.models
+            .map { sample_id, adapted_rds, adapted_xml ->
+                tuple(sample_id, adapted_rds)
+            }
+
+        /*
+        * If no medium is supplied, predict one using gapseq.
+        */
+        if (!params.gapseq_medium) {
+
+            /*
+            * Extract the pathway evidence produced by FIND.
+            *
+            * Emits:
+            * tuple(sample_id, pathways)
+            */
+            gapseq_pathways_ch = RUN_GAPSEQ_FIND.out.evidence
+                .map { sample_id, reactions, pathways ->
+                    tuple(sample_id, pathways)
+                }
+
+            /*
+            * Combine the adapted model with its pathway evidence.
+            *
+            * Result:
+            * tuple(sample_id, adapted_rds, pathways)
+            */
+            gapseq_medium_input_ch = gapseq_adapted_rds_ch
+                .join(
+                    gapseq_pathways_ch,
+                    by: 0
+                )
+
+            RUN_GAPSEQ_MEDIUM(gapseq_medium_input_ch)
+
+            /*
+            * Combine the adapted model with the predicted medium.
+            *
+            * Result:
+            * tuple(sample_id, adapted_rds, medium)
+            */
+            gapseq_fill_input_ch = gapseq_adapted_rds_ch
+                .join(
+                    RUN_GAPSEQ_MEDIUM.out.media,
+                    by: 0
+                )
+
+        } else {
+
+            /*
+            * A gapseq-formatted medium was supplied by the user,
+            * so skip medium prediction and attach that medium
+            * directly to every adapted model.
+            */
+            gapseq_medium_file = file(
+                params.gapseq_medium,
+                checkIfExists: true
+            )
+
+            gapseq_fill_input_ch = gapseq_adapted_rds_ch
+                .map { sample_id, adapted_rds ->
+                    tuple(
+                        sample_id,
+                        adapted_rds,
+                        gapseq_medium_file
+                    )
+                }
+        }
+
+        /*
+        * Gap-fill the adapted model using either the predicted
+        * or user-supplied medium.
+        */
+        RUN_GAPSEQ_FILL(gapseq_fill_input_ch)
+
+        /*
+        * Add the final gapseq SBML models to the common model
+        * channel used by COBRApy and Escher.
+        *
+        * Expected format:
+        * tuple(sample_id, medium, model)
+        */
+        gapseq_models_ch = RUN_GAPSEQ_FILL.out.models
+            .map { sample_id, model ->
+                tuple(
+                    sample_id,
+                    params.gapseq_medium ? 'GAPSEQ_CUSTOM' : 'GAPSEQ_AUTO',
+                    model
+                )
+            }
+
+        all_models_ch = all_models_ch.mix(gapseq_models_ch)
     }
     
 
