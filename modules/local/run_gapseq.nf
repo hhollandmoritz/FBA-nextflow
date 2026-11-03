@@ -251,8 +251,60 @@ process RUN_GAPSEQ_ADAPT {
           emit: logs
 
     script:
-    def add_ids = params.gapseq_adapt_add?.toString()
-    def remove_ids = params.gapseq_adapt_remove?.toString()
+    /*
+    * Parse the parameters file to determine if the reactions are supplied in a file or as a list.
+    */
+    def parse_adapt_ids = { value ->
+
+        /*
+        * No parameter supplied.
+        */
+        if (!value) {
+            return null
+        }
+
+        def spec = value.toString().trim()
+
+        /*
+        * First, check whether the parameter points to a file.
+        *
+        * If it does, read one or more identifiers from each
+        * non-empty, non-comment line and convert them to the
+        * comma-separated format expected by `gapseq adapt`.
+        */
+        def candidate = null
+
+        try {
+            candidate = file(spec)
+        } catch (Exception ignored) {
+            // The value is not a valid file path.
+            // Treat it as an inline list below.
+        }
+
+        if (candidate && java.nio.file.Files.isRegularFile(candidate)) {
+
+            def ids = java.nio.file.Files
+                .readAllLines(candidate)
+                .collect { it.trim() }
+                .findAll { it && !it.startsWith('#') }
+                .collectMany { line ->
+                    line.split(',')
+                        .collect { it.trim() }
+                        .findAll { it }
+                }
+
+            return ids ? ids.join(',') : null
+        }
+
+        /*
+        * Otherwise, treat the parameter itself as the
+        * comma-separated identifier list.
+        */
+        return spec
+    }
+
+    def add_ids = parse_adapt_ids(params.gapseq_adapt_add)
+    def remove_ids = parse_adapt_ids(params.gapseq_adapt_remove)
 
     /*
      * gapseq adapt requires at least one operation.
