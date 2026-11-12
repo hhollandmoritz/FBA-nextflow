@@ -73,8 +73,82 @@ process RUN_RAVEN_DRAFT {
 }
 
 /*
-process RAVEN_ADAPT {
-    // Optional reaction customization
+* Curate the model from user-supplied reaction lists
+*/
+process RUN_RAVEN_ADAPT {
+    tag "${sample_id}"
+
+    input:
+    tuple val(sample_id), path(draft_model)
+
+    path metabolites
+    path import_reactions
+    path reference_model
+    path add_reactions
+    path modify_reactions
+    path remove_reactions
+
+    val objective
+
+    output:
+    tuple val(sample_id),
+          path("${sample_id}-adapt.xml"),
+          emit: models
+
+    tuple val(sample_id),
+          path("${sample_id}-adapt-curation.tsv"),
+          emit: evidence
+
+    tuple val(sample_id),
+          path("${sample_id}.raven-adapt.log"),
+          emit: logs
+
+    script:
+    // 'options' is a list of updates to make to the model
+    def options = [
+        metabolites      ? "--metabolites '${metabolites}'" : "",
+        import_reactions ? "--import-reactions '${import_reactions}'" : "",
+        reference_model  ? "--reference-model '${reference_model}'" : "",
+        add_reactions    ? "--add-reactions '${add_reactions}'" : "",
+        modify_reactions ? "--modify-reactions '${modify_reactions}'" : "",
+        remove_reactions ? "--remove-reactions '${remove_reactions}'" : "",
+        objective        ? "--objective '${objective}'" : ""
+    ].findAll { it }.join(' ')
+
+    if (options) {
+        """
+        set -o pipefail
+
+        python ${projectDir}/bin/curate_cobra_model.py \
+            --model '${draft_model}' \
+            --output '${sample_id}-adapt.xml' \
+            --report '${sample_id}-adapt-curation.tsv' \
+            ${options} \
+            2>&1 | tee '${sample_id}.raven-adapt.log'
+        """
+    } else {
+        """
+        cp '${draft_model}' '${sample_id}-adapt.xml'
+
+        printf 'operation\\treaction_id\\tbefore\\tafter\\tsource\\tevidence\\n' \
+            > '${sample_id}-adapt-curation.tsv'
+
+        echo 'No adaptations requested; draft unchanged.' \
+            > '${sample_id}.raven-adapt.log'
+        """
+    }
+
+    stub:
+    """
+    touch '${sample_id}-adapt.xml'
+
+    printf 'operation\\treaction_id\\tbefore\\tafter\\tsource\\tevidence\\n' \
+        > '${sample_id}-adapt-curation.tsv'
+
+    echo 'Stub RAVEN adaptation: ${sample_id}' \
+        > '${sample_id}.raven-adapt.log'
+    """
+
 }
 
 process RAVEN_GAPFILL {
