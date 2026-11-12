@@ -111,7 +111,8 @@ def parse_args():
     parser.add_argument("--rxn-flags", type=Path,
                         help="Optional quality flag TSV from same artefact release")
     parser.add_argument("--domain", choices=("prokaryotes", "eukaryotes"),
-                        default="prokaryotes")
+                        default="prokaryotes",
+                        help="The domain of life (prokaryotes or eukaryotes), passed along to raven Kegg annnotation")
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--cutoff", type=float, default=1e-30)
     parser.add_argument("--min-score-ratio-ko", type=float, default=0.3)
