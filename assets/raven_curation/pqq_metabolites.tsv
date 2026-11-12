@@ -1,0 +1,5 @@
+metabolite_id	name	compartment	formula	charge	source	evidence
+PQQTEST_etoh_p	Ethanol	p	C2H6O	0	KEGG:R09479	EC:1.1.5.5; integration test
+PQQTEST_acald_p	Acetaldehyde	p	C2H4O	0	KEGG:R09479	EC:1.1.5.5; integration test
+PQQTEST_q8_p	Ubiquinone-8	p	C49H74O4	0	KEGG:R09479	EC:1.1.5.5; integration test
+PQQTEST_q8h2_p	Ubiquinol-8	p	C49H76O4	0	KEGG:R09479	EC:1.1.5.5; integration test

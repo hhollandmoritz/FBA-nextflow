@@ -1,0 +1,2 @@
+reaction_id	name	stoichiometry	lower_bound	upper_bound	gpr	source	evidence
+PQQ_ADH_TEST	PQQ alcohol dehydrogenase (quinone), EC 1.1.5.5	"{""PQQTEST_etoh_p"":-1,""PQQTEST_q8_p"":-1,""PQQTEST_acald_p"":1,""PQQTEST_q8h2_p"":1}"	0	1000		KEGG:R09479	EC:1.1.5.5

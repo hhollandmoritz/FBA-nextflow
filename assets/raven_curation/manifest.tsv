@@ -1,0 +1,2 @@
+sample_id	metabolites	import_reactions	reference_model	add_reactions	modify_reactions	remove_reactions	objective
+G_011_1B_oryzifermentans_assembly_called_genes	assets/raven_curation/pqq_metabolites.tsv			assets/raven_curation/pqq_add_reactions.tsv			
