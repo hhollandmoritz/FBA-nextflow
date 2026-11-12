@@ -115,30 +115,42 @@ workflow {
             .combine(raven_curation_ch)
             .map { sample_id, draft_model, manifest ->
 
-                // Retrieve instructions for this genome.
+                // Retrieve this genome's curation instructions.
+                // Use an empty map if the genome is not listed.
                 def row = manifest.get(sample_id, [:])
 
-                // Create a list of curation file paths for Nextflow to 
-                // pass along with the genome.
-                // Blank entries become empty lists.
-                def curationFile = { key ->
-                    row[key]?.trim()
-                        ? file(row[key], checkIfExists: true)
-                        : []
-                }
+                // Resolve optional files for this genome.
+                def metabolites = row.metabolites?.trim() ?
+                    file(row.metabolites, checkIfExists: true) : []
+
+                def import_reactions = row.import_reactions?.trim() ?
+                    file(row.import_reactions, checkIfExists: true) : []
+
+                def reference_model = row.reference_model?.trim() ?
+                    file(row.reference_model, checkIfExists: true) : []
+
+                def add_reactions = row.add_reactions?.trim() ?
+                    file(row.add_reactions, checkIfExists: true) : []
+
+                def modify_reactions = row.modify_reactions?.trim() ?
+                    file(row.modify_reactions, checkIfExists: true) : []
+
+                def remove_reactions = row.remove_reactions?.trim() ?
+                    file(row.remove_reactions, checkIfExists: true) : []
 
                 tuple(
                     sample_id,
                     draft_model,
-                    curationFile('metabolites'),
-                    curationFile('import_reactions'),
-                    curationFile('reference_model'),
-                    curationFile('add_reactions'),
-                    curationFile('modify_reactions'),
-                    curationFile('remove_reactions'),
+                    metabolites,
+                    import_reactions,
+                    reference_model,
+                    add_reactions,
+                    modify_reactions,
+                    remove_reactions,
                     row.objective ?: ''
                 )
             }
+
 
         /*
         * Step 4: Run curation.
