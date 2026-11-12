@@ -118,6 +118,10 @@ process RUN_RAVEN_ADAPT {
         """
         set -o pipefail
 
+         # Use a writable cache inside the Nextflow task directory.
+        export XDG_CACHE_HOME="\$PWD/.cache"
+        mkdir -p "\$XDG_CACHE_HOME"
+
         python ${projectDir}/bin/curate_cobra_model.py \
             --model '${draft_model}' \
             --output '${sample_id}-adapt.xml' \
