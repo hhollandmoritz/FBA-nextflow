@@ -18,6 +18,7 @@ include {
 
 include {
     RUN_RAVEN_DRAFT
+    RUN_RAVEN_ADAPT
 } from './modules/local/run_raven'
 
 include { COBRA_ANALYSIS } from './subworkflows/local/cobra_analysis'
@@ -66,23 +67,102 @@ workflow {
     if (params.run_raven) {
 
         /*
-        * Initial reconstruction from protein FASTA.
+        * Step 1: Initial reconstruction from protein FASTA.
         *
         * Input:
         * tuple(sample_id, faa)
+        *
+        * Output:
+        * tuple(sample_id, draft_model)
         */
         RUN_RAVEN_DRAFT(genomes_ch)
 
         /*
-        * Add the draft models to the common model channel.
+        * Step 2: Raven adapt; Read curation instructions for each genome.
+        *
+        * The manifest contains one row per genome, keyed
+        * by sample_id.
+        *
+        * If no manifest is supplied, use an empty map.
+        */
+        if (params.raven_adapt_manifest) {
+
+            raven_curation_ch = Channel
+                .fromPath(
+                    params.raven_adapt_manifest,
+                    checkIfExists: true
+                )
+                .splitCsv(header: true, sep: '\t')
+                .collect()
+                .map { rows ->
+                    rows.collectEntries { row ->
+                        [(row.sample_id): row]
+                    }
+                }
+
+        } else {
+            raven_curation_ch = Channel.value([:])
+        }
+
+        /*
+        * Step 3: Match each draft model to its curation
+        * instructions using sample_id.
+        *
+        * Genomes absent from the manifest receive no
+        * modifications.
+        */
+        raven_adapt_input_ch = RUN_RAVEN_DRAFT.out.models
+            .combine(raven_curation_ch)
+            .map { sample_id, draft_model, manifest ->
+
+                // Retrieve instructions for this genome.
+                def row = manifest.get(sample_id, [:])
+
+                // Create a list of curation file paths for Nextflow to 
+                // pass along with the genome.
+                // Blank entries become empty lists.
+                def curationFile = { key ->
+                    row[key]?.trim()
+                        ? file(row[key], checkIfExists: true)
+                        : []
+                }
+
+                tuple(
+                    sample_id,
+                    draft_model,
+                    curationFile('metabolites'),
+                    curationFile('import_reactions'),
+                    curationFile('reference_model'),
+                    curationFile('add_reactions'),
+                    curationFile('modify_reactions'),
+                    curationFile('remove_reactions'),
+                    row.objective ?: ''
+                )
+            }
+
+        /*
+        * Step 4: Run curation.
+        *
+        * Input:
+        * tuple(
+        *   sample_id, draft_model,
+        *   metabolites, import_reactions, reference_model,
+        *   add_reactions, modify_reactions, remove_reactions,
+        *   objective
+        * )
+        *
+        * Output:
+        * tuple(sample_id, adapted_model)
+        */
+        RUN_RAVEN_ADAPT(raven_adapt_input_ch)
+
+        /*
+        * Step 5: Send models to downstream analysis.
         *
         * Output:
         * tuple(sample_id, medium, model)
-        *
-        * RAVEN_DRAFT indicates that the models have
-        * not yet been gap-filled.
         */
-        raven_models_ch = RUN_RAVEN_DRAFT.out.models
+        raven_models_ch = RUN_RAVEN_ADAPT.out.models
             .map { sample_id, model ->
                 tuple(
                     sample_id,
@@ -93,6 +173,7 @@ workflow {
 
         all_models_ch = all_models_ch.mix(raven_models_ch)
     }
+
 
     /*
     * gapseq reconstruction
