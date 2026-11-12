@@ -123,6 +123,15 @@ raven_rxn_flags: null
 
 raven_adapt_manifest: "assets/raven_curation/manifest.tsv"
 
+# RAVEN gap-filling
+raven_gapfill: true
+raven_gapfill_method: "fast_lp"
+
+# Default reaction template for all genomes
+raven_gapfill_template: "assets/raven/universal_kegg.xml"
+
+# Reaction templates to use for each genome (optional, default is universal_kegg.xml)
+raven_gapfill_manifest: null
 
 # ============================================================
 # COBRApy analysis settings
