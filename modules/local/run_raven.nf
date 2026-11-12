@@ -79,16 +79,15 @@ process RUN_RAVEN_ADAPT {
     tag "${sample_id}"
 
     input:
-    tuple val(sample_id), path(draft_model)
-
-    path metabolites
-    path import_reactions
-    path reference_model
-    path add_reactions
-    path modify_reactions
-    path remove_reactions
-
-    val objective
+    tuple val(sample_id),
+      path(draft_model),
+      path(metabolites),
+      path(import_reactions),
+      path(reference_model),
+      path(add_reactions),
+      path(modify_reactions),
+      path(remove_reactions),
+      val(objective)
 
     output:
     tuple val(sample_id),
